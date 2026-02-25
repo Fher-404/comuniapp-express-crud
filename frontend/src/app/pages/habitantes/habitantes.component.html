@@ -1,0 +1,336 @@
+<!-- ── TOPBAR ─────────────────────────────────────── -->
+<div class="topbar">
+<div class="topbar-left">
+    <h1><i class="bi bi-people-fill me-2" style="color:var(--primary)"></i>Habitantes</h1>
+    <p>Gestión del padrón de habitantes registrados</p>
+</div>
+<div class="topbar-right">
+    <div class="avatar">A</div>
+</div>
+</div>
+
+<!-- ── BODY ──────────────────────────────────────────── -->
+<div class="page-body">
+<div class="table-card">
+
+    <!-- Header tabla -->
+    <div class="table-card-header">
+    <h2>Padrón de Habitantes</h2>
+    <div class="d-flex gap-2 align-items-center">
+        <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Buscar habitante..."
+                [(ngModel)]="busqueda" (input)="buscar()">
+        </div>
+        <button class="btn-primary-gs1" (click)="abrirCrear()">
+        <i class="bi bi-plus-lg"></i> Nuevo Habitante
+        </button>
+    </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="empty-state">
+    <i class="bi bi-arrow-repeat"></i>
+    <h3>Cargando habitantes...</h3>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="!loading && filtrados.length === 0" class="empty-state">
+    <i class="bi bi-people"></i>
+    <h3>Sin resultados</h3>
+    <p>No se encontraron habitantes con ese criterio</p>
+    </div>
+
+    <!-- Tabla -->
+    <div *ngIf="!loading && filtrados.length > 0" class="table-responsive">
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Nombre Completo</th>
+            <th>Género</th>
+            <th>Sector</th>
+            <th>Teléfono</th>
+            <th>Correo</th>
+            <th>Jefe Familia</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let h of filtrados">
+            <td><strong>{{ getNombreCompleto(h) }}</strong></td>
+            <td>{{ h.genero | titlecase }}</td>
+            <td>{{ h.direccion?.sector ?? '—' }}</td>
+            <td>{{ h.telefono_celular ?? '—' }}</td>
+            <td>{{ h.correo ?? '—' }}</td>
+            <td>
+            <span class="badge-gs1" [ngClass]="h.jefe_familia ? 'badge-success' : 'badge-gray'">
+                {{ h.jefe_familia ? 'Sí' : 'No' }}
+            </span>
+            </td>
+            <td>
+            <div class="d-flex gap-1">
+                <button class="btn-icon edit" title="Editar" (click)="abrirEditar(h)">
+                <i class="bi bi-pencil-fill"></i>
+                </button>
+                <button class="btn-icon delete" title="Eliminar" (click)="confirmarEliminar(h._id)">
+                <i class="bi bi-trash-fill"></i>
+                </button>
+            </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+</div>
+
+<!-- ── MODAL CREAR / EDITAR ───────────────────────── -->
+<div *ngIf="modalVisible" class="modal d-block modal-gs1" tabindex="-1"
+    style="background:rgba(0,0,0,.4)">
+<div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+
+    <div class="modal-header">
+        <h5 class="modal-title">
+        <i class="bi bi-person-fill me-2"></i>
+        {{ modoEdicion ? 'Editar Habitante' : 'Nuevo Habitante' }}
+        </h5>
+        <button class="btn-icon" (click)="modalVisible = false">
+        <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+
+    <div class="modal-body p-4">
+
+        <!-- Datos personales -->
+        <p class="fw-bold text-primary mb-3">
+        <i class="bi bi-person me-1"></i> Datos Personales
+        </p>
+        <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <label class="form-label-gs1">Primer Nombre *</label>
+            <input class="form-control-gs1" [(ngModel)]="form.primer_nombre">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label-gs1">Segundo Nombre</label>
+            <input class="form-control-gs1" [(ngModel)]="form.segundo_nombre">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label-gs1">Primer Apellido *</label>
+            <input class="form-control-gs1" [(ngModel)]="form.primer_apellido">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label-gs1">Segundo Apellido</label>
+            <input class="form-control-gs1" [(ngModel)]="form.segundo_apellido">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Fecha Nacimiento *</label>
+            <input type="date" class="form-control-gs1" [(ngModel)]="form.fecha_nacimiento">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Género *</label>
+            <select class="form-control-gs1" [(ngModel)]="form.genero">
+            <option value="">Seleccionar...</option>
+            <option value="masculino">Masculino</option>
+            <option value="femenino">Femenino</option>
+            <option value="otro">Otro</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Estado Civil</label>
+            <select class="form-control-gs1" [(ngModel)]="form.estado_civil">
+            <option value="">Seleccionar...</option>
+            <option value="soltero">Soltero/a</option>
+            <option value="casado">Casado/a</option>
+            <option value="divorciado">Divorciado/a</option>
+            <option value="viudo">Viudo/a</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Teléfono Celular</label>
+            <input type="number" class="form-control-gs1" [(ngModel)]="form.telefono_celular">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Teléfono Local</label>
+            <input type="number" class="form-control-gs1" [(ngModel)]="form.telefono_local">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Correo</label>
+            <input type="email" class="form-control-gs1" [(ngModel)]="form.correo">
+        </div>
+        </div>
+
+        <!-- Dirección -->
+        <p class="fw-bold text-primary mb-3">
+        <i class="bi bi-geo-alt me-1"></i> Dirección
+        </p>
+        <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <label class="form-label-gs1">Sector</label>
+            <input class="form-control-gs1" [(ngModel)]="form.direccion.sector">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label-gs1">Calle</label>
+            <input class="form-control-gs1" [(ngModel)]="form.direccion.calle">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label-gs1">Casa</label>
+            <input class="form-control-gs1" [(ngModel)]="form.direccion.casa">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label-gs1">Punto Referencia</label>
+            <input class="form-control-gs1" [(ngModel)]="form.direccion.punto_referencia">
+        </div>
+        </div>
+
+        <!-- Salud -->
+        <p class="fw-bold text-primary mb-3">
+        <i class="bi bi-heart-pulse me-1"></i> Salud
+        </p>
+        <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <label class="form-label-gs1">¿Tiene Discapacidad?</label>
+            <select class="form-control-gs1" [(ngModel)]="form.discapacidad.tiene_discapacidad">
+            <option [ngValue]="false">No</option>
+            <option [ngValue]="true">Sí</option>
+            </select>
+        </div>
+        <div class="col-md-4" *ngIf="form.discapacidad.tiene_discapacidad">
+            <label class="form-label-gs1">Tipo Discapacidad</label>
+            <input class="form-control-gs1" [(ngModel)]="form.discapacidad.tipo">
+        </div>
+        <div class="col-md-4" *ngIf="form.discapacidad.tiene_discapacidad">
+            <label class="form-label-gs1">Grado</label>
+            <input class="form-control-gs1" [(ngModel)]="form.discapacidad.grado">
+        </div>
+        <div class="col-12">
+            <label class="form-label-gs1">
+            Enfermedades Crónicas
+            <span class="text-muted fw-normal">(separadas por coma)</span>
+            </label>
+            <input class="form-control-gs1"
+                placeholder="Ej: TDAH, Hipertensión"
+                [(ngModel)]="form.enfermedades_cronicas">
+        </div>
+        </div>
+
+        <!-- Situación socioeconómica -->
+        <p class="fw-bold text-primary mb-3">
+        <i class="bi bi-house me-1"></i> Situación Socioeconómica
+        </p>
+        <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <label class="form-label-gs1">Nivel Instrucción</label>
+            <select class="form-control-gs1" [(ngModel)]="form.nivel_instruccion">
+            <option value="">Seleccionar...</option>
+            <option value="primaria">Primaria</option>
+            <option value="secundaria">Secundaria</option>
+            <option value="universitario">Universitario</option>
+            <option value="técnico">Técnico</option>
+            <option value="ingeniero">Ingeniero</option>
+            <option value="postgrado">Postgrado</option>
+            <option value="ninguno">Ninguno</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Ocupación</label>
+            <input class="form-control-gs1" [(ngModel)]="form.ocupacion">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Ingreso Mensual (Bs)</label>
+            <input type="number" class="form-control-gs1" [(ngModel)]="form.ingreso_mensual">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Tipo Vivienda</label>
+            <select class="form-control-gs1" [(ngModel)]="form.vivienda.tipo_vivienda">
+            <option value="">Seleccionar...</option>
+            <option value="casa">Casa</option>
+            <option value="apartamento">Apartamento</option>
+            <option value="mansion">Mansión</option>
+            <option value="rancho">Rancho</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Condición Vivienda</label>
+            <select class="form-control-gs1" [(ngModel)]="form.vivienda.condicion_vivienda">
+            <option value="">Seleccionar...</option>
+            <option value="buena">Buena</option>
+            <option value="regular">Regular</option>
+            <option value="mala">Mala</option>
+            <option value="destruida">Destruida</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">¿Vivienda Propia?</label>
+            <select class="form-control-gs1" [(ngModel)]="form.vivienda.es_propia">
+            <option [ngValue]="false">No</option>
+            <option [ngValue]="true">Sí</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">¿Jefe de Familia?</label>
+            <select class="form-control-gs1" [(ngModel)]="form.jefe_familia">
+            <option [ngValue]="false">No</option>
+            <option [ngValue]="true">Sí</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Registrado Por</label>
+            <input class="form-control-gs1" [(ngModel)]="form.registrado_por">
+        </div>
+        <div class="col-md-4" *ngIf="modoEdicion">
+            <label class="form-label-gs1">Actualizado Por</label>
+            <input class="form-control-gs1" [(ngModel)]="form.actualizado_por">
+        </div>
+        </div>
+
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn-ghost" (click)="modalVisible = false">
+        <i class="bi bi-x"></i> Cancelar
+        </button>
+        <button type="button" class="btn-primary-gs1" (click)="guardar()">
+        <i class="bi bi-check-lg"></i>
+        {{ modoEdicion ? 'Guardar Cambios' : 'Crear Habitante' }}
+        </button>
+    </div>
+
+    </div>
+</div>
+</div>
+
+<!-- ── MODAL CONFIRMAR ELIMINAR ───────────────────── -->
+<div *ngIf="confirmVisible" class="modal d-block modal-gs1" tabindex="-1"
+    style="background:rgba(0,0,0,.4)">
+<div class="modal-dialog modal-sm">
+    <div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title text-danger">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>Confirmar
+        </h5>
+    </div>
+    <div class="modal-body p-4">
+        <p>¿Estás seguro de que deseas eliminar este habitante?</p>
+        <p class="text-muted" style="font-size:13px">
+        Esta acción lo marcará como inactivo en el sistema.
+        </p>
+    </div>
+    <div class="modal-footer">
+        <button class="btn-ghost" (click)="confirmVisible = false">Cancelar</button>
+        <button class="btn-primary-gs1"
+                style="background:var(--danger)"
+                (click)="eliminar()">
+        <i class="bi bi-trash-fill"></i> Eliminar
+        </button>
+    </div>
+    </div>
+</div>
+</div>
+
+<!-- ── TOAST ──────────────────────────────────────── -->
+<div *ngIf="toast.visible" class="toast-gs1"
+    [style.background]="toast.tipo === 'error' ? '#e02424' : '#111827'">
+<i class="bi" [ngClass]="toast.tipo === 'error' ? 'bi-x-circle-fill' : 'bi-check-circle-fill'"></i>
+{{ toast.mensaje }}
+</div>

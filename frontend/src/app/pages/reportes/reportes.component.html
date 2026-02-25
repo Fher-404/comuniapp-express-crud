@@ -1,0 +1,184 @@
+<div class="topbar">
+<div class="topbar-left">
+    <h1><i class="bi bi-exclamation-triangle-fill me-2" style="color:#c27803"></i>Reportes Comunitarios</h1>
+    <p>Seguimiento de incidencias y reportes del sector</p>
+</div>
+<div class="topbar-right"><div class="avatar">A</div></div>
+</div>
+
+<div class="page-body">
+<div class="table-card">
+    <div class="table-card-header">
+    <h2>Registro de Reportes</h2>
+    <div class="d-flex gap-2 align-items-center">
+        <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Buscar reporte..."
+                [(ngModel)]="busqueda" (input)="buscar()">
+        </div>
+        <button type="button" class="btn-primary-gs1" (click)="abrirCrear()">
+        <i class="bi bi-plus-lg"></i> Nuevo Reporte
+        </button>
+    </div>
+    </div>
+
+    <div *ngIf="loading" class="empty-state">
+    <i class="bi bi-arrow-repeat"></i><h3>Cargando...</h3>
+    </div>
+    <div *ngIf="!loading && filtrados.length === 0" class="empty-state">
+    <i class="bi bi-shield-check"></i>
+    <h3>Sin reportes</h3><p>No hay incidencias registradas</p>
+    </div>
+
+    <div *ngIf="!loading && filtrados.length > 0" class="table-responsive">
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Incidencia</th>
+            <th>Descripción</th>
+            <th>Sector</th>
+            <th>Prioridad</th>
+            <th>Estatus</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let r of filtrados">
+            <td><strong>{{ r.tipo_incidencia }}</strong></td>
+            <td class="text-truncate-2" style="max-width:200px">{{ r.descripcion }}</td>
+            <td>{{ r.sector }}</td>
+            <td>
+            <span class="badge-gs1" [ngClass]="getPrioridadClass(r.prioridad)">
+                {{ r.prioridad }}
+            </span>
+            </td>
+            <td>
+            <span class="badge-gs1" [ngClass]="getEstatusClass(r.estatus)">
+                {{ r.estatus }}
+            </span>
+            </td>
+            <td>{{ r.fecha_creacion | date:'dd/MM/yyyy' }}</td>
+            <td>
+            <div class="d-flex gap-1">
+                <button type="button" class="btn-icon edit" (click)="abrirEditar(r)">
+                <i class="bi bi-pencil-fill"></i>
+                </button>
+                <button type="button" class="btn-icon delete" (click)="confirmarEliminar(r._id)">
+                <i class="bi bi-trash-fill"></i>
+                </button>
+            </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+</div>
+
+<!-- Modal -->
+<div *ngIf="modalVisible" class="modal d-block modal-gs1" tabindex="-1"
+    style="background:rgba(0,0,0,.4)">
+<div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ modoEdicion ? 'Editar Reporte' : 'Nuevo Reporte' }}
+        </h5>
+        <button type="button" class="btn-icon" (click)="modalVisible = false">
+        <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="modal-body p-4">
+        <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label-gs1">Tipo de Incidencia *</label>
+            <select class="form-control-gs1" [(ngModel)]="form.tipo_incidencia">
+            <option value="">Seleccionar...</option>
+            <option value="Electricidad">Electricidad</option>
+            <option value="Agua">Agua</option>
+            <option value="Vialidad">Vialidad</option>
+            <option value="Seguridad">Seguridad</option>
+            <option value="Basura">Basura</option>
+            <option value="Otro">Otro</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label-gs1">Prioridad</label>
+            <select class="form-control-gs1" [(ngModel)]="form.prioridad">
+            <option value="Alta">Alta</option>
+            <option value="Media">Media</option>
+            <option value="Baja">Baja</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label-gs1">Estatus</label>
+            <select class="form-control-gs1" [(ngModel)]="form.estatus">
+            <option value="Abierto">Abierto</option>
+            <option value="En proceso">En proceso</option>
+            <option value="Resuelto">Resuelto</option>
+            <option value="Cerrado">Cerrado</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label-gs1">Sector *</label>
+            <input class="form-control-gs1" [(ngModel)]="form.sector">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label-gs1">Reportado Por</label>
+            <input class="form-control-gs1" [(ngModel)]="form.reportado_por">
+        </div>
+        <div class="col-12">
+            <label class="form-label-gs1">Descripción *</label>
+            <textarea class="form-control-gs1" rows="3" [(ngModel)]="form.descripcion"></textarea>
+        </div>
+        <div class="col-12">
+            <label class="form-label-gs1">Observaciones</label>
+            <textarea class="form-control-gs1" rows="2" [(ngModel)]="form.observaciones"></textarea>
+        </div>
+        <div class="col-12">
+            <label class="form-label-gs1">Evidencia (URL)</label>
+            <input class="form-control-gs1" [(ngModel)]="form.evidencia">
+        </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn-ghost" (click)="modalVisible = false">
+        <i class="bi bi-x"></i> Cancelar
+        </button>
+        <button type="button" class="btn-primary-gs1" (click)="guardar()">
+        <i class="bi bi-check-lg"></i>
+        {{ modoEdicion ? 'Guardar Cambios' : 'Crear Reporte' }}
+        </button>
+    </div>
+    </div>
+</div>
+</div>
+
+<!-- Confirmar -->
+<div *ngIf="confirmVisible" class="modal d-block modal-gs1" tabindex="-1"
+    style="background:rgba(0,0,0,.4)">
+<div class="modal-dialog modal-sm">
+    <div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title text-danger">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>Confirmar
+        </h5>
+    </div>
+    <div class="modal-body p-4"><p>¿Cerrar este reporte?</p></div>
+    <div class="modal-footer">
+        <button type="button" class="btn-ghost" (click)="confirmVisible = false">Cancelar</button>
+        <button type="button" class="btn-primary-gs1" style="background:var(--danger)" (click)="eliminar()">
+        <i class="bi bi-x-circle-fill"></i> Cerrar Reporte
+        </button>
+    </div>
+    </div>
+</div>
+</div>
+
+<div *ngIf="toast.visible" class="toast-gs1"
+    [style.background]="toast.tipo === 'error' ? '#e02424' : '#111827'">
+<i class="bi" [ngClass]="toast.tipo === 'error' ? 'bi-x-circle-fill' : 'bi-check-circle-fill'"></i>
+{{ toast.mensaje }}
+</div>

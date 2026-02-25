@@ -1,0 +1,178 @@
+<div class="topbar">
+<div class="topbar-left">
+    <h1><i class="bi bi-calendar-event-fill me-2" style="color:var(--primary)"></i>Jornadas y Eventos</h1>
+    <p>Planificación y seguimiento de jornadas comunitarias</p>
+</div>
+<div class="topbar-right"><div class="avatar">A</div></div>
+</div>
+
+<div class="page-body">
+<div class="table-card">
+    <div class="table-card-header">
+    <h2>Registro de Jornadas</h2>
+    <div class="d-flex gap-2 align-items-center">
+        <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Buscar jornada..."
+                [(ngModel)]="busqueda" (input)="buscar()">
+        </div>
+        <button type="button" class="btn-primary-gs1" (click)="abrirCrear()">
+        <i class="bi bi-plus-lg"></i> Nueva Jornada
+        </button>
+    </div>
+    </div>
+
+    <div *ngIf="loading" class="empty-state">
+    <i class="bi bi-arrow-repeat"></i><h3>Cargando...</h3>
+    </div>
+    <div *ngIf="!loading && filtradas.length === 0" class="empty-state">
+    <i class="bi bi-calendar-x"></i>
+    <h3>Sin jornadas registradas</h3>
+    </div>
+
+    <div *ngIf="!loading && filtradas.length > 0" class="table-responsive">
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Evento</th>
+            <th>Tipo</th>
+            <th>Fecha</th>
+            <th>Lugar</th>
+            <th>Beneficios</th>
+            <th>Estatus</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let j of filtradas">
+            <td><strong>{{ j.nombre_evento }}</strong></td>
+            <td>{{ j.tipo_jornada }}</td>
+            <td>{{ j.fecha_inicio | date:'dd/MM/yyyy' }}</td>
+            <td>{{ j.sector_lugar ?? '—' }}</td>
+            <td>
+            <span *ngFor="let b of j.beneficios" class="badge-gs1 badge-info me-1">{{ b }}</span>
+            </td>
+            <td>
+            <span class="badge-gs1" [ngClass]="getEstatusClass(j.estatus)">{{ j.estatus }}</span>
+            </td>
+            <td>
+            <div class="d-flex gap-1">
+                <button type="button" class="btn-icon edit" (click)="abrirEditar(j)">
+                <i class="bi bi-pencil-fill"></i>
+                </button>
+                <button type="button" class="btn-icon delete" (click)="confirmarEliminar(j._id)">
+                <i class="bi bi-trash-fill"></i>
+                </button>
+            </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+</div>
+
+<!-- Modal -->
+<div *ngIf="modalVisible" class="modal d-block modal-gs1" tabindex="-1"
+    style="background:rgba(0,0,0,.4)">
+<div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title">
+        <i class="bi bi-calendar-event-fill me-2"></i>
+        {{ modoEdicion ? 'Editar Jornada' : 'Nueva Jornada' }}
+        </h5>
+        <button type="button" class="btn-icon" (click)="modalVisible = false">
+        <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="modal-body p-4">
+        <div class="row g-3">
+        <div class="col-md-8">
+            <label class="form-label-gs1">Nombre del Evento *</label>
+            <input class="form-control-gs1" [(ngModel)]="form.nombre_evento">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Tipo de Jornada *</label>
+            <select class="form-control-gs1" [(ngModel)]="form.tipo_jornada">
+            <option value="">Seleccionar...</option>
+            <option value="Alimentacion">Alimentación</option>
+            <option value="Salud">Salud</option>
+            <option value="Educacion">Educación</option>
+            <option value="Recreacion">Recreación</option>
+            <option value="Otro">Otro</option>
+            </select>
+        </div>
+        <div class="col-12">
+            <label class="form-label-gs1">Descripción</label>
+            <textarea class="form-control-gs1" rows="2" [(ngModel)]="form.descripcion"></textarea>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Fecha de Inicio *</label>
+            <input type="date" class="form-control-gs1" [(ngModel)]="form.fecha_inicio">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Sector / Lugar</label>
+            <input class="form-control-gs1" [(ngModel)]="form.sector_lugar">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Estatus</label>
+            <select class="form-control-gs1" [(ngModel)]="form.estatus">
+            <option value="Programada">Programada</option>
+            <option value="En curso">En curso</option>
+            <option value="Finalizada">Finalizada</option>
+            <option value="Cancelada">Cancelada</option>
+            </select>
+        </div>
+        <div class="col-md-8">
+            <label class="form-label-gs1">
+            Beneficios <span class="text-muted fw-normal">(separados por coma)</span>
+            </label>
+            <input class="form-control-gs1" placeholder="pollo, carne, pescado..."
+                [(ngModel)]="form.beneficios">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Registrado Por</label>
+            <input class="form-control-gs1" [(ngModel)]="form.registrado_por">
+        </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn-ghost" (click)="modalVisible = false">
+        <i class="bi bi-x"></i> Cancelar
+        </button>
+        <button type="button" class="btn-primary-gs1" (click)="guardar()">
+        <i class="bi bi-check-lg"></i>
+        {{ modoEdicion ? 'Guardar Cambios' : 'Crear Jornada' }}
+        </button>
+    </div>
+    </div>
+</div>
+</div>
+
+<!-- Confirmar -->
+<div *ngIf="confirmVisible" class="modal d-block modal-gs1" tabindex="-1"
+    style="background:rgba(0,0,0,.4)">
+<div class="modal-dialog modal-sm">
+    <div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title text-danger">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>Confirmar
+        </h5>
+    </div>
+    <div class="modal-body p-4"><p>¿Cancelar esta jornada?</p></div>
+    <div class="modal-footer">
+        <button type="button" class="btn-ghost" (click)="confirmVisible = false">No</button>
+        <button type="button" class="btn-primary-gs1" style="background:var(--danger)" (click)="eliminar()">
+        <i class="bi bi-x-circle-fill"></i> Sí, cancelar
+        </button>
+    </div>
+    </div>
+</div>
+</div>
+
+<div *ngIf="toast.visible" class="toast-gs1"
+    [style.background]="toast.tipo === 'error' ? '#e02424' : '#111827'">
+<i class="bi" [ngClass]="toast.tipo === 'error' ? 'bi-x-circle-fill' : 'bi-check-circle-fill'"></i>
+{{ toast.mensaje }}
+</div>

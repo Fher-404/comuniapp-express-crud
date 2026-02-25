@@ -1,0 +1,213 @@
+<div class="topbar">
+<div class="topbar-left">
+    <h1><i class="bi bi-box-seam-fill me-2" style="color:var(--primary)"></i>Ayudas</h1>
+    <p>Gestión de ayudas y recursos comunitarios</p>
+</div>
+<div class="topbar-right"><div class="avatar">A</div></div>
+</div>
+
+<div class="page-body">
+<div class="table-card">
+
+    <div class="table-card-header">
+    <h2>Registro de Ayudas</h2>
+    <div class="d-flex gap-2 align-items-center">
+        <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Buscar ayuda..."
+                [(ngModel)]="busqueda" (input)="buscar()">
+        </div>
+        <button type="button" class="btn-primary-gs1" (click)="abrirCrear()">
+        <i class="bi bi-plus-lg"></i> Nueva Ayuda
+        </button>
+    </div>
+    </div>
+
+    <div *ngIf="loading" class="empty-state">
+    <i class="bi bi-arrow-repeat"></i><h3>Cargando...</h3>
+    </div>
+    <div *ngIf="!loading && filtradas.length === 0" class="empty-state">
+    <i class="bi bi-box-seam"></i>
+    <h3>Sin ayudas registradas</h3>
+    <p>Agrega la primera ayuda comunitaria</p>
+    </div>
+
+    <div *ngIf="!loading && filtradas.length > 0" class="table-responsive">
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Tipo</th>
+            <th>Proveedor</th>
+            <th>Disponibilidad</th>
+            <th>Prioridad</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let a of filtradas">
+            <td><code>{{ a.codigo_ayuda }}</code></td>
+            <td><strong>{{ a.nombre }}</strong></td>
+            <td>{{ a.tipo | titlecase }}</td>
+            <td>{{ a.proveedor ?? '—' }}</td>
+            <td>{{ a.disponibilidad }} {{ a.unidad_medida }}</td>
+            <td>
+            <span class="badge-gs1" [ngClass]="getPrioridadClass(a.prioridad_distribucion)">
+                {{ a.prioridad_distribucion | titlecase }}
+            </span>
+            </td>
+            <td>
+            <div class="d-flex gap-1">
+                <button type="button" class="btn-icon edit" (click)="abrirEditar(a)">
+                <i class="bi bi-pencil-fill"></i>
+                </button>
+                <button type="button" class="btn-icon delete" (click)="confirmarEliminar(a._id)">
+                <i class="bi bi-trash-fill"></i>
+                </button>
+            </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+</div>
+
+<!-- Modal Crear/Editar -->
+<div *ngIf="modalVisible" class="modal d-block modal-gs1" tabindex="-1"
+    style="background:rgba(0,0,0,.4)">
+<div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title">
+        <i class="bi bi-box-seam-fill me-2"></i>
+        {{ modoEdicion ? 'Editar Ayuda' : 'Nueva Ayuda' }}
+        </h5>
+        <button type="button" class="btn-icon" (click)="modalVisible = false">
+        <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="modal-body p-4">
+
+        <p class="fw-bold text-primary mb-3"><i class="bi bi-info-circle me-1"></i> Información General</p>
+        <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <label class="form-label-gs1">Código Ayuda *</label>
+            <input class="form-control-gs1" placeholder="AYU-001" [(ngModel)]="form.codigo_ayuda">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Tipo *</label>
+            <select class="form-control-gs1" [(ngModel)]="form.tipo">
+            <option value="">Seleccionar...</option>
+            <option value="alimentacion">Alimentación</option>
+            <option value="medicamento">Medicamento</option>
+            <option value="ropa">Ropa</option>
+            <option value="utiles">Útiles escolares</option>
+            <option value="otro">Otro</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Nombre *</label>
+            <input class="form-control-gs1" [(ngModel)]="form.nombre">
+        </div>
+        <div class="col-12">
+            <label class="form-label-gs1">Descripción</label>
+            <textarea class="form-control-gs1" rows="2" [(ngModel)]="form.descripcion"></textarea>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Unidad de Medida</label>
+            <input class="form-control-gs1" placeholder="bolsas, cajas..." [(ngModel)]="form.unidad_medida">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Proveedor</label>
+            <input class="form-control-gs1" [(ngModel)]="form.proveedor">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Disponibilidad</label>
+            <input type="number" class="form-control-gs1" [(ngModel)]="form.disponibilidad">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label-gs1">Prioridad Distribución</label>
+            <select class="form-control-gs1" [(ngModel)]="form.prioridad_distribucion">
+            <option value="alta">Alta</option>
+            <option value="media">Media</option>
+            <option value="baja">Baja</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label-gs1">Condiciones Entrega
+            <span class="text-muted fw-normal">(separadas por coma)</span>
+            </label>
+            <input class="form-control-gs1" [(ngModel)]="form.condiciones_entrega">
+        </div>
+        <div class="col-12">
+            <label class="form-label-gs1">Requisitos Especiales
+            <span class="text-muted fw-normal">(separados por coma)</span>
+            </label>
+            <input class="form-control-gs1" [(ngModel)]="form.requisitos_especiales">
+        </div>
+        </div>
+
+        <p class="fw-bold text-primary mb-3"><i class="bi bi-building me-1"></i> Almacenamiento</p>
+        <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label-gs1">Ubicación</label>
+            <input class="form-control-gs1" [(ngModel)]="form.almacenamiento.ubicacion">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Condiciones</label>
+            <input class="form-control-gs1" [(ngModel)]="form.almacenamiento.condiciones">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-gs1">Responsable</label>
+            <input class="form-control-gs1" [(ngModel)]="form.almacenamiento.responsable">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label-gs1">Registrado Por</label>
+            <input class="form-control-gs1" [(ngModel)]="form.registrado_por">
+        </div>
+        </div>
+
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn-ghost" (click)="modalVisible = false">
+        <i class="bi bi-x"></i> Cancelar
+        </button>
+        <button type="button" class="btn-primary-gs1" (click)="guardar()">
+        <i class="bi bi-check-lg"></i>
+        {{ modoEdicion ? 'Guardar Cambios' : 'Crear Ayuda' }}
+        </button>
+    </div>
+    </div>
+</div>
+</div>
+
+<!-- Confirmar eliminar -->
+<div *ngIf="confirmVisible" class="modal d-block modal-gs1" tabindex="-1"
+    style="background:rgba(0,0,0,.4)">
+<div class="modal-dialog modal-sm">
+    <div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title text-danger">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>Confirmar
+        </h5>
+    </div>
+    <div class="modal-body p-4">
+        <p>¿Eliminar esta ayuda del sistema?</p>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn-ghost" (click)="confirmVisible = false">Cancelar</button>
+        <button type="button" class="btn-primary-gs1" style="background:var(--danger)" (click)="eliminar()">
+        <i class="bi bi-trash-fill"></i> Eliminar
+        </button>
+    </div>
+    </div>
+</div>
+</div>
+
+<div *ngIf="toast.visible" class="toast-gs1"
+    [style.background]="toast.tipo === 'error' ? '#e02424' : '#111827'">
+<i class="bi" [ngClass]="toast.tipo === 'error' ? 'bi-x-circle-fill' : 'bi-check-circle-fill'"></i>
+{{ toast.mensaje }}
+</div>
