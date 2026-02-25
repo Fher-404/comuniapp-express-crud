@@ -459,9 +459,9 @@ Base URL: `http://localhost:3000/api`
 ---
 
 ## 👨‍💻 Autores
-Fernando Marcano - C.I. V.- 29.752.386 - T.S.U. En Informatica
-Yhusleika Molina - C.I. V.- 27.401.354 - T.S.U. En Informatica
-Di mauro Vergara - C.I. V.- 26.498.909 - T.S.U. En Informatica
+- Fernando Marcano - C.I. V.- 29.752.386 - T.S.U. En Informatica
+- Yhusleika Molina - C.I. V.- 27.401.354 - T.S.U. En Informatica
+- Di mauro Vergara - C.I. V.- 26.498.909 - T.S.U. En Informatica
 
 
 Proyecto desarrollado como evaluación universitaria para la asignatura de Bases de datos II
